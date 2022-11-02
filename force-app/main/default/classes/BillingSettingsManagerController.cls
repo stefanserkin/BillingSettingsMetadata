@@ -1,6 +1,9 @@
 public with sharing class BillingSettingsManagerController {
 
     private static final String DEFAULT_BILLING_SETTING_NAME = 'Default';
+    private static final String DEFAULT_BILLING_SETTING_FULLNAME = 'Billing_Setting.Default';
+
+    private static Decimal defaultTimeLimit = Billing_Setting__mdt.getInstance('Default').Time_Limit__c;
 
     @AuraEnabled(cacheable=true)
     public static Billing_Setting__mdt getDefaultBillingSetting(
@@ -25,9 +28,25 @@ public with sharing class BillingSettingsManagerController {
     }
 
     @AuraEnabled
-    public static String activateBillingInProgress() {
+    public static String activateBillingInProgress(
+        String billingBatchId
+    ) {
         try {
-            return 'called activation method';
+            Map<String, Object> mapFieldData = new Map<String, Object>();
+            mapFieldData.put('Billing_In_Progress__c', true);
+            mapFieldData.put('Billing_Batch_ID__c', billingBatchId);
+            mapFieldData.put('Last_Billing_Start_Date_Time__c', Datetime.now());
+            mapFieldData.put('Expiration_Date_Time__c', Datetime.now().addHours(Integer.valueOf( defaultTimeLimit )));
+            mapFieldData.put('Running_User_ID__c', UserInfo.getUserId());
+            mapFieldData.put('Running_User_Name__c', UserInfo.getName());
+
+            String strResult = MetadataDeploy.updateAndDeployMetadata(
+                DEFAULT_BILLING_SETTING_FULLNAME, 
+                DEFAULT_BILLING_SETTING_NAME, 
+                mapFieldData
+            );
+
+            return strResult;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -36,7 +55,16 @@ public with sharing class BillingSettingsManagerController {
     @AuraEnabled
     public static String deactivateBillingInProgress() {
         try {
-            return 'called deactivation method';
+            Map<String, Object> mapFieldData = new Map<String, Object>();
+            mapFieldData.put('Billing_In_Progress__c', false);
+
+            String strResult = MetadataDeploy.updateAndDeployMetadata(
+                DEFAULT_BILLING_SETTING_FULLNAME, 
+                DEFAULT_BILLING_SETTING_NAME, 
+                mapFieldData
+            );
+
+            return strResult;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

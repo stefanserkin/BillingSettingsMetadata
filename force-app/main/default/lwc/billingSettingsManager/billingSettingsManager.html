@@ -1,8 +1,20 @@
 <template>
     <lightning-card title={cardTitle} icon-name={cardIconName}>
         <p class="slds-var-m-around_medium">
-            <lightning-button variant="brand" label="Start" title="Start" onclick={handleStart} class="slds-m-left_x-small"></lightning-button>
-            <lightning-button variant="destructive" label="Stop" title="Stop" onclick={handleStop} class="slds-m-left_x-small"></lightning-button>
+            <lightning-button if:false={billingInProgress} 
+                variant="brand" 
+                label="Start" 
+                title="Start" 
+                onclick={handleStart} 
+                class="slds-m-left_x-small"
+            ></lightning-button>
+            <lightning-button if:true={billingInProgress} 
+                variant="destructive" 
+                label="Stop" 
+                title="Stop" 
+                onclick={handleStop} 
+                class="slds-m-left_x-small"
+            ></lightning-button>
         </p>
     </lightning-card>
 </template>

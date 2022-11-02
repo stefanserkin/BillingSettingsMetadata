@@ -11,6 +11,7 @@ export default class BillingSettingsManager extends LightningElement {
 
     cardTitle = 'Manage Billing Settings';
     cardIconName = 'custom:custom19';
+    billingInProgress = false;
 
     strResult = '';
     wiredBillingSettings = [];
@@ -21,9 +22,8 @@ export default class BillingSettingsManager extends LightningElement {
         this.isLoading = true;
         this.wiredBillingSettings = result;
         if (result.data) {
-            console.table(result.data);
-            console.log(result.data[0]);
-            this.defaultBillingSetting = result.data[0];
+            this.billingInProgress = result.data.Billing_In_Progress__c;
+            this.defaultBillingSetting = result.data;
             this.error = undefined;
         } else if (result.error) {
             console.error(result.error);
@@ -35,10 +35,12 @@ export default class BillingSettingsManager extends LightningElement {
 
     handleStart() {
         this.isLoading = true;
-        activateBillingInProgress({ billingBatchId: '$recordId' })
+        activateBillingInProgress({ billingBatchId: this.recordId })
             .then(result => {
-                console.log(result);
                 this.strResult = result;
+                if (result == 'Success') {
+                    this.billingInProgress = true;
+                }
             })
             .catch(error => {
                 console.error(error);
@@ -51,8 +53,10 @@ export default class BillingSettingsManager extends LightningElement {
         this.isLoading = true;
         deactivateBillingInProgress()
             .then(result => {
-                console.log(result);
                 this.strResult = result;
+                if (result == 'Success') {
+                    this.billingInProgress = false;
+                }
             })
             .catch(error => {
                 console.error(error);
