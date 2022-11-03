@@ -1,4 +1,5 @@
 import { LightningElement, wire } from 'lwc';
+import { refreshApex } from '@salesforce/apex';
 import getDefaultBillingSetting from '@salesforce/apex/BillingSettingsManagerController.getDefaultBillingSetting';
 import deactivateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.deactivateBillingInProgress';
 
@@ -46,7 +47,6 @@ export default class BillingInProgressWarning extends LightningElement {
                 this.dateOptions
             );
             this.defaultBillingSetting = defaultSetting;
-            console.log(this.defaultBillingSetting);
             this.error = undefined;
         } else if (result.error) {
             console.error(result.error);
