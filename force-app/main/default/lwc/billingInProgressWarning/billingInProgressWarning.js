@@ -1,9 +1,6 @@
-import { LightningElement, api, wire } from 'lwc';
-import { refreshApex } from '@salesforce/apex';
+import { LightningElement, wire } from 'lwc';
 import getDefaultBillingSetting from '@salesforce/apex/BillingSettingsManagerController.getDefaultBillingSetting';
-import activateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.activateBillingInProgress';
 import deactivateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.deactivateBillingInProgress';
-import Billing_Settings_Manager_Component_Help_Text from '@salesforce/label/c.Billing_Settings_Manager_Component_Help_Text'
 
 const DATE_OPTIONS = {
     weekday: 'long', 
@@ -15,25 +12,23 @@ const DATE_OPTIONS = {
     hour12: true, 
 };
 
-export default class BillingSettingsManager extends LightningElement {
-    @api recordId;
-
+export default class BillingInProgressWarning extends LightningElement {
     isLoading = false;
     error;
 
-    helpText = Billing_Settings_Manager_Component_Help_Text;
     dateOptions = DATE_OPTIONS;
 
-    @api cardTitle;
-    @api cardIconName;
-    billingInProgress = false;
-
-    strResult = '';
     wiredBillingSettings = [];
     defaultBillingSetting;
-
-    numHoursToExpiration;
+    billingInProgress = false;
     dtExpiration;
+
+    isUserDeactivated = false;
+    strTemporaryConfirmationMsg = 'Success! The Billing in Progress setting has been deactivated. This setting can be reactivated from any billing batch record page.';
+
+    get alertMessage() {
+        return `Billing is currently in progress, which nullifies access control restrictions due to outstanding balances. Click the button below to deactivate this setting if billing is complete. The setting will automatically expire on ${this.dtExpiration}.`;
+    }
 
     @wire(getDefaultBillingSetting)
     wiredResult(result) {
@@ -45,15 +40,13 @@ export default class BillingSettingsManager extends LightningElement {
             let dtExpire = new Date(defaultSetting.Expiration_Date_Time__c);
             if (defaultSetting.Billing_In_Progress__c && dtExpire > dtNow) {
                 this.billingInProgress = true;
-            } else {
-                this.billingInProgress = false;
             }
-            this.numHoursToExpiration = defaultSetting.Time_Limit__c;
             this.dtExpiration = this.formatDateTime(
                 defaultSetting.Expiration_Date_Time__c, 
                 this.dateOptions
             );
             this.defaultBillingSetting = defaultSetting;
+            console.log(this.defaultBillingSetting);
             this.error = undefined;
         } else if (result.error) {
             console.error(result.error);
@@ -63,35 +56,13 @@ export default class BillingSettingsManager extends LightningElement {
         this.isLoading = false;
     }
 
-    handleStart() {
-        this.isLoading = true;
-        activateBillingInProgress({ billingBatchId: this.recordId })
-            .then(result => {
-                this.strResult = result;
-                if (result == 'Success') {
-                    let dt = new Date();
-                    dt.setTime(dt.getTime() + (this.numHoursToExpiration * 60 * 60 * 1000));
-                    this.dtExpiration = this.formatDateTime(
-                        dt, 
-                        this.dateOptions
-                    );
-                    this.billingInProgress = true;
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                this.error = error;
-            });
-        refreshApex(this.wiredBillingSettings);
-        this.isLoading = false;
-    }
-
     handleStop() {
         this.isLoading = true;
         deactivateBillingInProgress()
             .then(result => {
                 this.strResult = result;
                 if (result == 'Success') {
+                    this.isUserDeactivated = true;
                     this.billingInProgress = false;
                 }
             })

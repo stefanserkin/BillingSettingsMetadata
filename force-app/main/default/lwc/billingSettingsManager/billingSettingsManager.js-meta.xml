@@ -11,6 +11,19 @@
             <objects>
                 <object>TREX1__Billing_Batch__c</object>
             </objects>
+            <property 
+                name="cardTitle" 
+                type="String" 
+                label="Card Title" 
+                default="Manage Billing Settings"
+            />
+            <property
+                name="cardIconName" 
+                type="String" 
+                label="Card SLDS Icon Name" 
+                default="custom:custom19"
+                description="Use icon names from the SLDS library"
+            />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

@@ -1,0 +1,23 @@
+<template>
+    <lightning-card>
+        <template if:true={billingInProgress}>
+            <p class="slds-text-heading_medium slds-var-m-around_large slds-text-color_destructive">
+                {alertMessage}
+            </p>
+            <p class="slds-var-m-around_large slds-align_absolute-center">
+                <lightning-button if:true={billingInProgress} 
+                    variant="destructive" 
+                    label="Deactivate" 
+                    title="Stop" 
+                    onclick={handleStop} 
+                    class="slds-m-left_x-small"
+                ></lightning-button>
+            </p>
+        </template>
+        <template if:true={isUserDeactivated}>
+            <p class="slds-text-heading_medium slds-var-m-around_large">
+                {strTemporaryConfirmationMsg}
+            </p>
+        </template>
+    </lightning-card>
+</template>
