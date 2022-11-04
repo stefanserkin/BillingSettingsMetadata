@@ -1,14 +1,12 @@
 public with sharing class BillingSettingsManagerController {
 
-    private static final String DEFAULT_BILLING_SETTING_NAME = 'Default';
-    private static final String DEFAULT_BILLING_SETTING_FULLNAME = 'Billing_Setting.Default';
+    @testVisible private static final String DEFAULT_BILLING_SETTING_NAME = 'Default';
+    @testVisible private static final String DEFAULT_BILLING_SETTING_FULLNAME = 'Billing_Setting.Default';
 
     private static Decimal defaultTimeLimit = Billing_Setting__mdt.getInstance('Default').Time_Limit__c;
 
     @AuraEnabled(cacheable=true)
-    public static Billing_Setting__mdt getDefaultBillingSetting(
-        String billingBatchId
-    ){
+    public static Billing_Setting__mdt getDefaultBillingSetting() {
         try {
             return [
                 SELECT Id, 

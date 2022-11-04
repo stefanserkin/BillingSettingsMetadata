@@ -14,17 +14,17 @@ public class MetadataDeploy implements Metadata.DeployCallback {
     public static String updateAndDeployMetadata(
         String fullName, 
         String label, 
-        Map<String, Object> fieldWithValuesMap
+        Map<String, Object> mapFieldValues
     ) {
         try {
             Metadata.CustomMetadata customMetadata = new Metadata.CustomMetadata();
             customMetadata.fullName = fullName;
             customMetadata.label = label;
     
-            for (String key : fieldWithValuesMap.keySet()) {
+            for (String key : mapFieldValues.keySet()) {
                 Metadata.CustomMetadataValue customField = new Metadata.CustomMetadataValue();
                 customField.field = key;
-                customField.value = fieldWithValuesMap.get(key);
+                customField.value = mapFieldValues.get(key);
                 customMetadata.values.add(customField);
             }
     
