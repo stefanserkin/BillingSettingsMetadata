@@ -1,9 +1,9 @@
 import { LightningElement, api, wire } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
-import getDefaultBillingSetting from '@salesforce/apex/BillingSettingsManagerController.getDefaultBillingSetting';
-import activateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.activateBillingInProgress';
-import deactivateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.deactivateBillingInProgress';
-import Billing_Settings_Manager_Component_Help_Text from '@salesforce/label/c.Billing_Settings_Manager_Component_Help_Text'
+import getBillingSettings from '@salesforce/apex/BillingSettingsManagerController.getBillingSettings';
+import toggleBillingSettings from '@salesforce/apex/BillingSettingsManagerController.toggleBillingSettings';
+import Billing_Settings_Manager_Component_Help_Text from '@salesforce/label/c.Billing_Settings_Manager_Component_Help_Text';
+import USER_ID from '@salesforce/user/Id';
 
 const DATE_OPTIONS = {
     weekday: 'long', 
@@ -23,6 +23,7 @@ export default class BillingSettingsManager extends LightningElement {
 
     helpText = Billing_Settings_Manager_Component_Help_Text;
     dateOptions = DATE_OPTIONS;
+    userId = USER_ID;
 
     @api cardTitle;
     @api cardIconName;
@@ -30,39 +31,70 @@ export default class BillingSettingsManager extends LightningElement {
 
     strResult = '';
     wiredBillingSettings = [];
-    defaultBillingSetting;
+    defaultBillingSettings;
 
     numHoursToExpiration;
     dtExpiration;
 
-    @wire(getDefaultBillingSetting)
+    billingSettingsNotFoundMessage = 'An org default has not been defined for the Billing Settings custom setting. Create an org default to utilize this feature';
+
+    get toggleButtonLabel() {
+        return !this.billingInProgress ? 'Commence Billing in Progress' : 'Deactivate';
+    }
+
+    get toggleButtonVariant() {
+        return !this.billingInProgress ? 'success' : 'destructive';
+    }
+
+    @wire(getBillingSettings, { userId: '$userId' })
     wiredResult(result) {
         this.isLoading = true;
         this.wiredBillingSettings = result;
         if (result.data) {
-            let defaultSetting = result.data;
+            let defaultSettings = result.data;
             let dtNow = new Date();
-            let dtExpire = new Date(defaultSetting.Expiration_Date_Time__c);
-            if (defaultSetting.Billing_In_Progress__c && dtExpire > dtNow) {
+            let dtExpire = new Date(defaultSettings.Expiration_Date_Time__c);
+            if (defaultSettings.Billing_In_Progress__c && dtExpire > dtNow) {
                 this.billingInProgress = true;
             } else {
                 this.billingInProgress = false;
             }
-            this.numHoursToExpiration = defaultSetting.Time_Limit__c;
-            this.dtExpiration = this.formatDateTime(
-                defaultSetting.Expiration_Date_Time__c, 
-                this.dateOptions
-            );
-            this.defaultBillingSetting = defaultSetting;
+            this.numHoursToExpiration = defaultSettings.Time_Limit__c;
+            this.dtExpiration = defaultSettings.Expiration_Date_Time__c != null ? 
+                this.formatDateTime(
+                    defaultSettings.Expiration_Date_Time__c, 
+                    this.dateOptions
+                ) :
+                '';
+            this.defaultBillingSettings = defaultSettings;
             this.error = undefined;
         } else if (result.error) {
             console.error(result.error);
-            this.defaultBillingSetting = undefined;
+            this.defaultBillingSettings = undefined;
             this.error = result.error;
         }
         this.isLoading = false;
     }
 
+    handleToggleBillingSettings() {
+        this.isLoading = true;
+        toggleBillingSettings({ billingBatchId: this.recordId })
+            .then(result => {
+                this.strResult = result;
+                if (result == 'Success') {
+                    this.billingInProgress = !this.billingInProgress;
+                    refreshApex(this.wiredBillingSettings);
+                    this.isLoading = false;
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                this.error = error;
+                this.isLoading = false;
+            });
+    }
+    
+/*
     handleStart() {
         this.isLoading = true;
         activateBillingInProgress({ billingBatchId: this.recordId })
@@ -85,23 +117,7 @@ export default class BillingSettingsManager extends LightningElement {
         refreshApex(this.wiredBillingSettings);
         this.isLoading = false;
     }
-
-    handleStop() {
-        this.isLoading = true;
-        deactivateBillingInProgress()
-            .then(result => {
-                this.strResult = result;
-                if (result == 'Success') {
-                    this.billingInProgress = false;
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                this.error = error;
-            });
-        refreshApex(this.wiredBillingSettings);
-        this.isLoading = false;
-    }
+*/
 
     /////////////////////////////////////////////
     //                  Utils

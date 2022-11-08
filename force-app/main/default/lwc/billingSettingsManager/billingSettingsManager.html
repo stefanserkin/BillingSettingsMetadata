@@ -1,6 +1,14 @@
 <template>
+    <!-- LIGHTNING CARD -->
     <lightning-card title={cardTitle} icon-name={cardIconName}>
-        <template if:true={defaultBillingSetting}>
+        
+        <!-- LIGHTNING SPINNER -->
+        <div>
+            <lightning-spinner if:true={isLoading} alternative-text="Loading" size="medium"></lightning-spinner>
+        </div>
+
+        <!-- CUSTOM SETTING IS FOUND -->
+        <template if:true={defaultBillingSettings}>
             <p class="slds-var-m-around_medium">
                 {helpText}
             </p>
@@ -8,21 +16,20 @@
                 Automatically Expires At: <template if:true={billingInProgress}>{dtExpiration}</template>
             </p>
             <p class="slds-var-m-around_medium slds-align_absolute-center">
-                <lightning-button if:false={billingInProgress} 
-                    variant="success" 
-                    label="Commence Billing In Progress" 
-                    title="Start" 
-                    onclick={handleStart} 
+                <lightning-button 
+                    variant={toggleButtonVariant} 
+                    label={toggleButtonLabel} 
+                    title={toggleButtonLabel} 
+                    onclick={handleToggleBillingSettings} 
                     class="slds-m-left_x-small"
                 ></lightning-button>
-                <lightning-button if:true={billingInProgress} 
-                    variant="destructive" 
-                    label="Deactivate" 
-                    title="Stop" 
-                    onclick={handleStop} 
-                    class="slds-m-left_x-small"
-                ></lightning-button>
-            </p>    
+            </p>
         </template>
+
+        <!-- CUSTOM SETTING IS NOT FOUND -->
+        <template if:false={defaultBillingSettings}>
+            {billingSettingsNotFoundMessage}
+        </template>
+
     </lightning-card>
 </template>
