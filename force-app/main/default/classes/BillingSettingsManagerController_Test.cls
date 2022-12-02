@@ -11,21 +11,28 @@ private class BillingSettingsManagerController_Test {
         
     @isTest
     static void testGetBillingSettings() {
+        BillingSettingsManagerController.BillingSettingsWrapper defaultSettings;
         Test.startTest();
-        Billing_Settings__c defaultSettings = BillingSettingsManagerController.getBillingSettings();
+        defaultSettings = BillingSettingsManagerController.getBillingSettings();
         Test.stopTest();
         
         Billing_Settings__c settingsToVerify = Billing_Settings__c.getInstance();
         
         System.assertEquals(
             settingsToVerify.Id, 
-            defaultSettings.Id, 
+            defaultSettings.billingSettingId, 
             'Ids should match'
+        );
+
+        System.assertEquals(
+            settingsToVerify.Time_Limit__c, 
+            defaultSettings.timeLimit, 
+            'Time limits should match'
         );
         
         System.assertEquals(
             settingsToVerify.Billing_In_Progress__c, 
-            defaultSettings.Billing_In_Progress__c, 
+            defaultSettings.billingInProgress, 
             'Billing in progress values should match'
         );
     }

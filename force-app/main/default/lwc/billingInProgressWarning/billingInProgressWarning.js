@@ -1,7 +1,6 @@
 import { LightningElement, wire } from 'lwc';
-import { refreshApex } from '@salesforce/apex';
-import getDefaultBillingSetting from '@salesforce/apex/BillingSettingsManagerController.getDefaultBillingSetting';
-import deactivateBillingInProgress from '@salesforce/apex/BillingSettingsManagerController.deactivateBillingInProgress';
+import getBillingSettings from '@salesforce/apex/BillingSettingsManagerController.getBillingSettings';
+import toggleBillingSettings from '@salesforce/apex/BillingSettingsManagerController.toggleBillingSettings';
 
 const DATE_OPTIONS = {
     weekday: 'long', 
@@ -20,9 +19,10 @@ export default class BillingInProgressWarning extends LightningElement {
     dateOptions = DATE_OPTIONS;
 
     wiredBillingSettings = [];
-    defaultBillingSetting;
+    defaultBillingSettings;
     billingInProgress = false;
     dtExpiration;
+    strResult;
 
     isUserDeactivated = false;
     strTemporaryConfirmationMsg = 'Success! The Billing in Progress setting has been deactivated. This setting can be reactivated from any billing batch record page.';
@@ -31,47 +31,51 @@ export default class BillingInProgressWarning extends LightningElement {
         return `Billing is currently in progress, which nullifies access control restrictions due to outstanding balances. Click the button below to deactivate this setting if billing is complete. The setting will automatically expire on ${this.dtExpiration}.`;
     }
 
-    @wire(getDefaultBillingSetting)
+    @wire(getBillingSettings)
     wiredResult(result) {
         this.isLoading = true;
         this.wiredBillingSettings = result;
         if (result.data) {
-            let defaultSetting = result.data;
+            let defaultSettings = result.data;
             let dtNow = new Date();
-            let dtExpire = new Date(defaultSetting.Expiration_Date_Time__c);
-            if (defaultSetting.Billing_In_Progress__c && dtExpire > dtNow) {
+            let dtExpire = new Date(defaultSettings.Expiration_Date_Time__c);
+            if (defaultSettings.Billing_In_Progress__c && dtExpire > dtNow) {
                 this.billingInProgress = true;
+            } else {
+                this.billingInProgress = false;
             }
-            this.dtExpiration = this.formatDateTime(
-                defaultSetting.Expiration_Date_Time__c, 
-                this.dateOptions
-            );
-            this.defaultBillingSetting = defaultSetting;
+            this.dtExpiration = defaultSettings.Expiration_Date_Time__c != null ? 
+                this.formatDateTime(
+                    defaultSettings.Expiration_Date_Time__c, 
+                    this.dateOptions
+                ) :
+                '';
+            this.defaultBillingSettings = defaultSettings;
             this.error = undefined;
         } else if (result.error) {
             console.error(result.error);
-            this.defaultBillingSetting = undefined;
+            this.defaultBillingSettings = undefined;
             this.error = result.error;
         }
         this.isLoading = false;
     }
 
-    handleStop() {
+    handleToggleBillingSettings() {
         this.isLoading = true;
-        deactivateBillingInProgress()
+        const billingBatchFakeId = 'deactivate';
+        toggleBillingSettings({ billingBatchId: billingBatchFakeId })
             .then(result => {
                 this.strResult = result;
                 if (result == 'Success') {
                     this.isUserDeactivated = true;
-                    this.billingInProgress = false;
+                    this.isLoading = false;
                 }
             })
             .catch(error => {
                 console.error(error);
                 this.error = error;
+                this.isLoading = false;
             });
-        refreshApex(this.wiredBillingSettings);
-        this.isLoading = false;
     }
 
     /////////////////////////////////////////////

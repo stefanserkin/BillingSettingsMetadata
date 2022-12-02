@@ -46,23 +46,23 @@ export default class BillingSettingsManager extends LightningElement {
         return !this.billingInProgress ? 'success' : 'destructive';
     }
 
-    @wire(getBillingSettings, { userId: '$userId' })
+    @wire(getBillingSettings)
     wiredResult(result) {
         this.isLoading = true;
         this.wiredBillingSettings = result;
         if (result.data) {
             let defaultSettings = result.data;
             let dtNow = new Date();
-            let dtExpire = new Date(defaultSettings.Expiration_Date_Time__c);
-            if (defaultSettings.Billing_In_Progress__c && dtExpire > dtNow) {
+            let dtExpire = new Date(defaultSettings.expirationDateTime);
+            if (defaultSettings.billingInProgress && dtExpire > dtNow) {
                 this.billingInProgress = true;
             } else {
                 this.billingInProgress = false;
             }
-            this.numHoursToExpiration = defaultSettings.Time_Limit__c;
-            this.dtExpiration = defaultSettings.Expiration_Date_Time__c != null ? 
+            this.numHoursToExpiration = defaultSettings.timeLimit;
+            this.dtExpiration = defaultSettings.expirationDateTime != null ? 
                 this.formatDateTime(
-                    defaultSettings.Expiration_Date_Time__c, 
+                    defaultSettings.expirationDateTime, 
                     this.dateOptions
                 ) :
                 '';
@@ -93,31 +93,6 @@ export default class BillingSettingsManager extends LightningElement {
                 this.isLoading = false;
             });
     }
-    
-/*
-    handleStart() {
-        this.isLoading = true;
-        activateBillingInProgress({ billingBatchId: this.recordId })
-            .then(result => {
-                this.strResult = result;
-                if (result == 'Success') {
-                    let dt = new Date();
-                    dt.setTime(dt.getTime() + (this.numHoursToExpiration * 60 * 60 * 1000));
-                    this.dtExpiration = this.formatDateTime(
-                        dt, 
-                        this.dateOptions
-                    );
-                    this.billingInProgress = true;
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                this.error = error;
-            });
-        refreshApex(this.wiredBillingSettings);
-        this.isLoading = false;
-    }
-*/
 
     /////////////////////////////////////////////
     //                  Utils

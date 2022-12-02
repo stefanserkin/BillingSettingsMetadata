@@ -1,6 +1,6 @@
 <template>
-    <lightning-card>
-        <template if:true={billingInProgress}>
+    <lightning-card if:true={billingInProgress}>
+        <template if:false={isUserDeactivated}>
             <p class="slds-text-heading_medium slds-var-m-around_large slds-text-color_destructive">
                 {alertMessage}
             </p>
@@ -8,8 +8,8 @@
                 <lightning-button if:true={billingInProgress} 
                     variant="destructive" 
                     label="Deactivate" 
-                    title="Stop" 
-                    onclick={handleStop} 
+                    title="Deactivate" 
+                    onclick={handleToggleBillingSettings} 
                     class="slds-m-left_x-small"
                 ></lightning-button>
             </p>
