@@ -38,15 +38,15 @@ export default class BillingInProgressWarning extends LightningElement {
         if (result.data) {
             let defaultSettings = result.data;
             let dtNow = new Date();
-            let dtExpire = new Date(defaultSettings.Expiration_Date_Time__c);
-            if (defaultSettings.Billing_In_Progress__c && dtExpire > dtNow) {
+            let dtExpire = new Date(defaultSettings.expirationDateTime);
+            if (defaultSettings.billingInProgress && dtExpire > dtNow) {
                 this.billingInProgress = true;
             } else {
                 this.billingInProgress = false;
             }
-            this.dtExpiration = defaultSettings.Expiration_Date_Time__c != null ? 
+            this.dtExpiration = defaultSettings.expirationDateTime != null ? 
                 this.formatDateTime(
-                    defaultSettings.Expiration_Date_Time__c, 
+                    defaultSettings.expirationDateTime, 
                     this.dateOptions
                 ) :
                 '';
